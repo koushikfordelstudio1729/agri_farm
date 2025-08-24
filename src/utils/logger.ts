@@ -24,11 +24,11 @@ class Logger {
     this.config = {
       level: process.env.LOG_LEVEL || (isProduction() ? 'info' : 'debug'),
       logToFile: process.env.LOG_TO_FILE === 'true' || isProduction(),
-      logToConsole: process.env.LOG_TO_CONSOLE === 'true' || isDevelopment(),
+      logToConsole: process.env.LOG_TO_CONSOLE !== 'false', // Default to true unless explicitly disabled
       logDirectory: process.env.LOG_DIRECTORY || 'logs',
       maxFiles: parseInt(process.env.LOG_MAX_FILES || '30', 10),
       maxSize: process.env.LOG_MAX_SIZE || '20m',
-      enableColorized: isDevelopment(),
+      enableColorized: !isProduction(), // Enable colors in non-production
       enableTimestamp: true,
       includeRequestId: true,
       ...config,
@@ -143,14 +143,15 @@ class Logger {
     this.logger.warn(message, meta);
   }
 
-  error(message: string, error?: Error, meta?: Record<string, unknown>): void {
+  error(message: string, error?: Error | any, meta?: Record<string, unknown>): void {
     const logData: Record<string, unknown> = {
       ...meta,
       ...(error && {
         error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
+          name: error?.name || 'Unknown',
+          message: error?.message || String(error) || 'Unknown error',
+          stack: error?.stack || 'No stack trace',
+          ...(typeof error === 'object' && error !== null && { originalError: error }),
         },
       }),
     };

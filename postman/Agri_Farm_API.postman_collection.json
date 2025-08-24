@@ -1,0 +1,2390 @@
+{
+  "info": {
+    "name": "Agri Farm API - Complete Collection",
+    "description": "Comprehensive Postman collection for Agri Farm (Plantix Clone) Backend API with all endpoints, authentication, and sample data",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.tokens) {",
+                  "        pm.environment.set('access_token', response.data.tokens.accessToken);",
+                  "        pm.environment.set('refresh_token', response.data.tokens.refreshToken);",
+                  "        pm.environment.set('user_id', response.data.user.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"farmer@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Farmer\",\n  \"phone\": \"+1234567890\",\n  \"countryCode\": \"+1\",\n  \"preferredLanguage\": \"en\",\n  \"acceptTerms\": true,\n  \"acceptPrivacy\": true,\n  \"marketingConsent\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.tokens) {",
+                  "        pm.environment.set('access_token', response.data.tokens.accessToken);",
+                  "        pm.environment.set('refresh_token', response.data.tokens.refreshToken);",
+                  "        pm.environment.set('user_id', response.data.user.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"farmer@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"rememberMe\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.tokens) {",
+                  "        pm.environment.set('access_token', response.data.tokens.accessToken);",
+                  "        pm.environment.set('refresh_token', response.data.tokens.refreshToken);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"farmer@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/password/reset",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "password", "reset"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 User Management",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Farmer\",\n  \"phone\": \"+1234567890\",\n  \"language\": \"en\",\n  \"timezone\": \"America/New_York\",\n  \"farmingExperience\": 5,\n  \"farmSize\": 10.5,\n  \"primaryCrops\": [\"corn\", \"wheat\", \"soybeans\"],\n  \"farmingType\": \"sustainable\",\n  \"location\": {\n    \"address\": \"123 Farm Road, Rural County\",\n    \"city\": \"Farmville\",\n    \"state\": \"Iowa\",\n    \"country\": \"USA\",\n    \"coordinates\": {\n      \"latitude\": 41.5868,\n      \"longitude\": -93.6250\n    }\n  },\n  \"units\": {\n    \"temperature\": \"celsius\",\n    \"area\": \"hectares\",\n    \"weight\": \"kg\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Upload Profile Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/image",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "profile", "image"]
+            }
+          }
+        },
+        {
+          "name": "Update User Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notifications\": {\n    \"email\": true,\n    \"push\": true,\n    \"sms\": false,\n    \"digestFrequency\": \"daily\",\n    \"diagnosisResults\": true,\n    \"weatherAlerts\": true,\n    \"priceAlerts\": true,\n    \"communityUpdates\": false,\n    \"expertReplies\": true,\n    \"marketingEmails\": false\n  },\n  \"privacy\": {\n    \"showProfile\": true,\n    \"showLocation\": false,\n    \"showContactInfo\": false,\n    \"allowDirectMessages\": true\n  },\n  \"display\": {\n    \"theme\": \"auto\",\n    \"language\": \"en\",\n    \"currency\": \"USD\",\n    \"units\": \"metric\",\n    \"timezone\": \"America/New_York\"\n  },\n  \"ai\": {\n    \"saveImages\": true,\n    \"shareAnonymous\": true,\n    \"improveModel\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/preferences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "preferences"]
+            }
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/search?q=farmer&role=user&verified=true&country=USA&page=1&limit=10&sortBy=reputation&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "farmer"
+                },
+                {
+                  "key": "role",
+                  "value": "user"
+                },
+                {
+                  "key": "verified",
+                  "value": "true"
+                },
+                {
+                  "key": "country",
+                  "value": "USA"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "reputation"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔬 Disease Diagnosis",
+      "item": [
+        {
+          "name": "Create Diagnosis",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "cropId",
+                  "value": "{{crop_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "{\"latitude\": 41.5868, \"longitude\": -93.6250, \"address\": \"Farm Location\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "symptoms",
+                  "value": "[\"yellowing leaves\", \"brown spots\", \"wilting\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "notes",
+                  "value": "Noticed these symptoms after recent rain",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/diagnosis",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diagnosis"]
+            }
+          }
+        },
+        {
+          "name": "Get User Diagnoses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/diagnosis?page=1&limit=10&status=completed&crop={{crop_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diagnosis"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "completed"
+                },
+                {
+                  "key": "crop",
+                  "value": "{{crop_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Diagnosis by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/diagnosis/{{diagnosis_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diagnosis", "{{diagnosis_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Request Expert Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Could you please review this diagnosis? I'm not sure about the AI result.\",\n  \"urgency\": \"medium\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/diagnosis/{{diagnosis_id}}/expert-review",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diagnosis", "{{diagnosis_id}}", "expert-review"]
+            }
+          }
+        },
+        {
+          "name": "Batch Diagnosis",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/diagnosis/batch",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diagnosis", "batch"]
+            }
+          }
+        },
+        {
+          "name": "Get Diagnosis Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/diagnosis/stats/overview",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diagnosis", "stats", "overview"]
+            }
+          }
+        },
+        {
+          "name": "Get Similar Diagnoses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/diagnosis/{{diagnosis_id}}/similar?limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diagnosis", "{{diagnosis_id}}", "similar"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌱 Crops Database",
+      "item": [
+        {
+          "name": "Get All Crops (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/crops/public?page=1&limit=20&category=vegetables&search=tomato",
+              "host": ["{{base_url}}"],
+              "path": ["api", "crops", "public"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "category",
+                  "value": "vegetables"
+                },
+                {
+                  "key": "search",
+                  "value": "tomato"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Crop by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.environment.set('crop_id', response.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/crops/{{crop_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "crops", "{{crop_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Search Crops",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/crops/search/query?q=tomato&category=vegetables&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "crops", "search", "query"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "tomato"
+                },
+                {
+                  "key": "category",
+                  "value": "vegetables"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Crop Diseases",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/crops/{{crop_id}}/diseases",
+              "host": ["{{base_url}}"],
+              "path": ["api", "crops", "{{crop_id}}", "diseases"]
+            }
+          }
+        },
+        {
+          "name": "Get Crop Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/crops/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "crops", "statistics"]
+            }
+          }
+        },
+        {
+          "name": "Create Crop (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Roma Tomato\",\n  \"scientificName\": \"Solanum lycopersicum\",\n  \"category\": \"vegetables\",\n  \"family\": \"Solanaceae\",\n  \"description\": \"A determinate tomato variety perfect for sauce making with thick flesh and fewer seeds.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/crops",
+              "host": ["{{base_url}}"],
+              "path": ["api", "crops"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🦠 Diseases Database",
+      "item": [
+        {
+          "name": "Get All Diseases (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/diseases/public?page=1&limit=20&type=fungal&severity=high",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diseases", "public"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "type",
+                  "value": "fungal"
+                },
+                {
+                  "key": "severity",
+                  "value": "high"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Disease by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.environment.set('disease_id', response.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/diseases/{{disease_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diseases", "{{disease_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Diseases by Crop",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/diseases/crop/{{crop_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diseases", "crop", "{{crop_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Report Disease Occurrence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": {\n    \"latitude\": 41.5868,\n    \"longitude\": -93.6250\n  },\n  \"severity\": \"medium\",\n  \"affectedArea\": 2.5,\n  \"notes\": \"Found in the northeast section of the field after heavy rains\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/diseases/{{disease_id}}/report",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diseases", "{{disease_id}}", "report"]
+            }
+          }
+        },
+        {
+          "name": "Get Disease Treatments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/diseases/{{disease_id}}/treatments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diseases", "{{disease_id}}", "treatments"]
+            }
+          }
+        },
+        {
+          "name": "Get Nearby Disease Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/diseases/reports/nearby?lat=41.5868&lng=-93.6250&radius=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "diseases", "reports", "nearby"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "41.5868"
+                },
+                {
+                  "key": "lng",
+                  "value": "-93.6250"
+                },
+                {
+                  "key": "radius",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌤️ Weather Integration",
+      "item": [
+        {
+          "name": "Get Current Weather",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/weather/current?lat=41.5868&lng=-93.6250",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weather", "current"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "41.5868"
+                },
+                {
+                  "key": "lng",
+                  "value": "-93.6250"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Weather Forecast",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/weather/forecast?lat=41.5868&lng=-93.6250&days=7",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weather", "forecast"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "41.5868"
+                },
+                {
+                  "key": "lng",
+                  "value": "-93.6250"
+                },
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Agricultural Advice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": {\n    \"latitude\": 41.5868,\n    \"longitude\": -93.6250\n  },\n  \"crops\": [\"{{crop_id}}\"],\n  \"farmSize\": 10.5,\n  \"season\": \"spring\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/weather/advice",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weather", "advice"]
+            }
+          }
+        },
+        {
+          "name": "Subscribe to Weather Alerts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": {\n    \"latitude\": 41.5868,\n    \"longitude\": -93.6250\n  },\n  \"alertTypes\": [\"rain\", \"frost\", \"storm\"],\n  \"radius\": 25,\n  \"notificationChannels\": [\"push\", \"email\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/weather/alerts/subscribe",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weather", "alerts", "subscribe"]
+            }
+          }
+        },
+        {
+          "name": "Get Weather Alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/weather/alerts?lat=41.5868&lng=-93.6250&radius=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weather", "alerts"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "41.5868"
+                },
+                {
+                  "key": "lng",
+                  "value": "-93.6250"
+                },
+                {
+                  "key": "radius",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Irrigation Recommendations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": {\n    \"latitude\": 41.5868,\n    \"longitude\": -93.6250\n  },\n  \"crops\": [\n    {\n      \"cropId\": \"{{crop_id}}\",\n      \"plantingDate\": \"2024-04-15\",\n      \"stage\": \"flowering\"\n    }\n  ],\n  \"soilMoisture\": 35\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/weather/irrigation",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weather", "irrigation"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Community Features",
+      "item": [
+        {
+          "name": "Get Community Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/community/posts?page=1&limit=10&type=question&sortBy=recent",
+              "host": ["{{base_url}}"],
+              "path": ["api", "community", "posts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "question"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "recent"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Community Post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.environment.set('post_id', response.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "How to deal with tomato blight?",
+                  "type": "text"
+                },
+                {
+                  "key": "content",
+                  "value": "I'm seeing brown spots on my tomato leaves. Has anyone experienced this before? What treatments worked for you?",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "question",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "plant diseases",
+                  "type": "text"
+                },
+                {
+                  "key": "tags",
+                  "value": "[\"tomatoes\", \"disease\", \"help-needed\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "visibility",
+                  "value": "public",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/community/posts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "community", "posts"]
+            }
+          }
+        },
+        {
+          "name": "Like Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/community/posts/{{post_id}}/like",
+              "host": ["{{base_url}}"],
+              "path": ["api", "community", "posts", "{{post_id}}", "like"]
+            }
+          }
+        },
+        {
+          "name": "Add Comment to Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"I had the same issue last year. Try using a copper-based fungicide spray early in the morning. Also, make sure to improve air circulation around your plants.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/community/posts/{{post_id}}/comments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "community", "posts", "{{post_id}}", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Get Post Comments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/community/posts/{{post_id}}/comments?page=1&limit=20&sortBy=newest",
+              "host": ["{{base_url}}"],
+              "path": ["api", "community", "posts", "{{post_id}}", "comments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "newest"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Trending Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/community/trending?period=week&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "community", "trending"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "week"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Community",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/community/search?q=tomato disease&type=posts&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "community", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "tomato disease"
+                },
+                {
+                  "key": "type",
+                  "value": "posts"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Feed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/community/feed?page=1&limit=15&includeFollowing=true&includeRecommended=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "community", "feed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "15"
+                },
+                {
+                  "key": "includeFollowing",
+                  "value": "true"
+                },
+                {
+                  "key": "includeRecommended",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💰 Market Prices",
+      "item": [
+        {
+          "name": "Get Current Market Prices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/market/prices?crop={{crop_id}}&location=Iowa&type=wholesale&page=1&limit=10&sortBy=price",
+              "host": ["{{base_url}}"],
+              "path": ["api", "market", "prices"],
+              "query": [
+                {
+                  "key": "crop",
+                  "value": "{{crop_id}}"
+                },
+                {
+                  "key": "location",
+                  "value": "Iowa"
+                },
+                {
+                  "key": "type",
+                  "value": "wholesale"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Price Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/market/trends/{{crop_id}}?period=30d&location=Iowa&includeForcast=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "market", "trends", "{{crop_id}}"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "30d"
+                },
+                {
+                  "key": "location",
+                  "value": "Iowa"
+                },
+                {
+                  "key": "includeForcast",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Price Alert",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.environment.set('alert_id', response.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"crop\": \"{{crop_id}}\",\n  \"targetPrice\": 250.00,\n  \"condition\": \"above\",\n  \"location\": {\n    \"latitude\": 41.5868,\n    \"longitude\": -93.6250,\n    \"radius\": 100\n  },\n  \"notificationChannels\": [\"push\", \"email\"],\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/market/alerts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "market", "alerts"]
+            }
+          }
+        },
+        {
+          "name": "Get Price History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/market/prices/history/{{crop_id}}?startDate=2024-01-01&endDate=2024-06-30&interval=weekly",
+              "host": ["{{base_url}}"],
+              "path": ["api", "market", "prices", "history", "{{crop_id}}"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-06-30"
+                },
+                {
+                  "key": "interval",
+                  "value": "weekly"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Market Locations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/market/locations?search=Chicago&type=wholesale&lat=41.8781&lng=-87.6298&radius=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "market", "locations"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Chicago"
+                },
+                {
+                  "key": "type",
+                  "value": "wholesale"
+                },
+                {
+                  "key": "lat",
+                  "value": "41.8781"
+                },
+                {
+                  "key": "lng",
+                  "value": "-87.6298"
+                },
+                {
+                  "key": "radius",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Personalized Insights",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/market/insights?crops[]={{crop_id}}&location=Iowa",
+              "host": ["{{base_url}}"],
+              "path": ["api", "market", "insights"],
+              "query": [
+                {
+                  "key": "crops[]",
+                  "value": "{{crop_id}}"
+                },
+                {
+                  "key": "location",
+                  "value": "Iowa"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👨‍⚕️ Expert Consultations",
+      "item": [
+        {
+          "name": "Get Available Experts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/experts?specialization=plant pathology&location=United States&rating=4&availability=week&sortBy=rating&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experts"],
+              "query": [
+                {
+                  "key": "specialization",
+                  "value": "plant pathology"
+                },
+                {
+                  "key": "location",
+                  "value": "United States"
+                },
+                {
+                  "key": "rating",
+                  "value": "4"
+                },
+                {
+                  "key": "availability",
+                  "value": "week"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "rating"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Expert Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.environment.set('expert_id', response.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/experts/{{expert_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experts", "{{expert_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Book Expert Consultation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.environment.set('consultation_id', response.data._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"scheduled\",\n  \"scheduledDate\": \"2024-08-30\",\n  \"timeSlot\": \"14:00-15:00\",\n  \"problem\": \"I have been experiencing significant yellowing and browning of leaves on my tomato plants. The symptoms started appearing about a week ago, primarily affecting the lower leaves first, then spreading upward. I've attached photos showing the current state. The plants are in raised beds with good drainage, and I've been watering at the base to avoid wetting the foliage. This is my third year growing tomatoes in this location, and I haven't had this issue before. I'm concerned it might be early blight or another fungal disease. Could you please help me identify the problem and recommend appropriate treatment options?\",\n  \"urgency\": \"medium\",\n  \"attachments\": [\n    {\n      \"url\": \"https://example.com/image1.jpg\",\n      \"type\": \"image\",\n      \"name\": \"tomato_leaf_yellowing_1.jpg\"\n    },\n    {\n      \"url\": \"https://example.com/image2.jpg\",\n      \"type\": \"image\",\n      \"name\": \"tomato_leaf_spots_2.jpg\"\n    }\n  ],\n  \"preferredLanguage\": \"en\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/experts/{{expert_id}}/consultations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experts", "{{expert_id}}", "consultations"]
+            }
+          }
+        },
+        {
+          "name": "Get Expert Availability",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/experts/{{expert_id}}/availability?date=2024-08-30&timezone=America/New_York",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experts", "{{expert_id}}", "availability"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2024-08-30"
+                },
+                {
+                  "key": "timezone",
+                  "value": "America/New_York"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Consultations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/experts/consultations/my?status=scheduled&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experts", "consultations", "my"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "scheduled"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Consultation Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/experts/consultations/{{consultation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experts", "consultations", "{{consultation_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Expert Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"review\": \"Dr. Johnson provided excellent advice for my tomato blight issue. Very knowledgeable and gave detailed treatment recommendations. The problem was resolved within a week of following the suggested approach. Highly recommended!\",\n  \"consultationId\": \"{{consultation_id}}\",\n  \"anonymous\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/experts/{{expert_id}}/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experts", "{{expert_id}}", "reviews"]
+            }
+          }
+        },
+        {
+          "name": "Get Expert Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/experts/{{expert_id}}/reviews?page=1&limit=10&rating=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experts", "{{expert_id}}", "reviews"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "rating",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔔 Notifications",
+      "item": [
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications?page=1&limit=20&isRead=false&priority=high&sortBy=date&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "isRead",
+                  "value": "false"
+                },
+                {
+                  "key": "priority",
+                  "value": "high"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "date"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isRead\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/{{notification_id}}/read",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "{{notification_id}}", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"diagnosis\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/read/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "read", "all"]
+            }
+          }
+        },
+        {
+          "name": "Get Notification Preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/preferences/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "preferences", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Update Notification Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"push\": {\n    \"diagnoses\": true,\n    \"expertMessages\": true,\n    \"communityActivity\": false,\n    \"priceAlerts\": true,\n    \"weatherAlerts\": true,\n    \"systemUpdates\": true,\n    \"marketing\": false\n  },\n  \"email\": {\n    \"diagnoses\": true,\n    \"expertMessages\": true,\n    \"communityActivity\": false,\n    \"priceAlerts\": true,\n    \"weatherAlerts\": true,\n    \"systemUpdates\": false,\n    \"marketing\": false,\n    \"weeklyDigest\": true\n  },\n  \"sms\": {\n    \"diagnoses\": false,\n    \"expertMessages\": true,\n    \"priceAlerts\": true,\n    \"weatherAlerts\": true,\n    \"criticalUpdates\": true\n  },\n  \"inApp\": {\n    \"diagnoses\": true,\n    \"expertMessages\": true,\n    \"communityActivity\": true,\n    \"priceAlerts\": true,\n    \"weatherAlerts\": true,\n    \"systemUpdates\": true\n  },\n  \"quietHours\": {\n    \"enabled\": true,\n    \"startTime\": \"22:00\",\n    \"endTime\": \"07:00\",\n    \"timezone\": \"America/New_York\"\n  },\n  \"timezone\": \"America/New_York\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/preferences/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "preferences", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Register Device for Push Notifications",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"dGVzdF9kZXZpY2VfdG9rZW5fZm9yX2lvc19vcl9hbmRyb2lk\",\n  \"platform\": \"ios\",\n  \"deviceId\": \"12345678-1234-1234-1234-123456789012\",\n  \"appVersion\": \"1.0.0\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/devices/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "devices", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get Notification Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/stats/overview?period=30d",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "stats", "overview"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "30d"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌍 Internationalization",
+      "item": [
+        {
+          "name": "Get Available Languages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/i18n/public/languages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "i18n", "public", "languages"]
+            }
+          }
+        },
+        {
+          "name": "Get User Translations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/i18n/translations?language=en&namespace=common",
+              "host": ["{{base_url}}"],
+              "path": ["api", "i18n", "translations"],
+              "query": [
+                {
+                  "key": "language",
+                  "value": "en"
+                },
+                {
+                  "key": "namespace",
+                  "value": "common"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Set Language Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"en\",\n  \"region\": \"US\",\n  \"timezone\": \"America/New_York\",\n  \"dateFormat\": \"MM/DD/YYYY\",\n  \"timeFormat\": \"12\",\n  \"currency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/i18n/preferences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "i18n", "preferences"]
+            }
+          }
+        },
+        {
+          "name": "Get Language Preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/i18n/preferences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "i18n", "preferences"]
+            }
+          }
+        },
+        {
+          "name": "Get Localized Content",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/i18n/content/crops?language=en&search=tomato&category=vegetables",
+              "host": ["{{base_url}}"],
+              "path": ["api", "i18n", "content", "crops"],
+              "query": [
+                {
+                  "key": "language",
+                  "value": "en"
+                },
+                {
+                  "key": "search",
+                  "value": "tomato"
+                },
+                {
+                  "key": "category",
+                  "value": "vegetables"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Translation Feedback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"common.save_button\",\n  \"language\": \"es\",\n  \"currentTranslation\": \"Guardar\",\n  \"suggestedTranslation\": \"Salvar\",\n  \"feedbackType\": \"improvement\",\n  \"description\": \"The word 'Salvar' is more commonly used in this context in Latin American Spanish.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/i18n/feedback",
+              "host": ["{{base_url}}"],
+              "path": ["api", "i18n", "feedback"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚙️ Admin Panel",
+      "item": [
+        {
+          "name": "Get Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/dashboard?period=month&timezone=America/New_York",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "dashboard"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month"
+                },
+                {
+                  "key": "timezone",
+                  "value": "America/New_York"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/analytics/users?startDate=2024-01-01&endDate=2024-08-30&userType=farmer&groupBy=week",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "analytics", "users"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-08-30"
+                },
+                {
+                  "key": "userType",
+                  "value": "farmer"
+                },
+                {
+                  "key": "groupBy",
+                  "value": "week"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users?page=1&limit=50&search=farmer&userType=user&status=active&sortBy=date&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "search",
+                  "value": "farmer"
+                },
+                {
+                  "key": "userType",
+                  "value": "user"
+                },
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "date"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suspend User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Violation of community guidelines - posting spam content repeatedly despite warnings\",\n  \"duration\": 7,\n  \"notifyUser\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{user_id}}/suspend",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "{{user_id}}", "suspend"]
+            }
+          }
+        },
+        {
+          "name": "Get System Configuration",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/config",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "config"]
+            }
+          }
+        },
+        {
+          "name": "Update System Configuration",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maintenanceMode\": false,\n  \"allowRegistration\": true,\n  \"requireEmailVerification\": true,\n  \"maxFileUploadSize\": 10,\n  \"diagnosisConfig\": {\n    \"aiThreshold\": 0.7,\n    \"requireExpertReview\": false,\n    \"maxImagesPerDiagnosis\": 5\n  },\n  \"communityConfig\": {\n    \"allowAnonymousPosts\": false,\n    \"requirePostModeration\": false,\n    \"maxPostsPerDay\": 10\n  },\n  \"marketConfig\": {\n    \"priceUpdateInterval\": 30,\n    \"dataRetentionDays\": 365\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/config",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "config"]
+            }
+          }
+        },
+        {
+          "name": "Get System Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "health"]
+            }
+          }
+        },
+        {
+          "name": "Get Content Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/content/reports?type=post&status=pending&priority=high&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "content", "reports"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "post"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                },
+                {
+                  "key": "priority",
+                  "value": "high"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-refresh token if needed",
+          "if (pm.environment.get('access_token') && pm.environment.get('refresh_token')) {",
+          "    // Check if token needs refresh (implement your logic here)",
+          "    // This is a placeholder for token refresh logic",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test scripts",
+          "pm.test('Response time is less than 5s', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has proper JSON structure', function () {",
+          "    if (pm.response.headers.get('Content-Type').includes('application/json')) {",
+          "        const response = pm.response.json();",
+          "        pm.expect(response).to.have.property('success');",
+          "        pm.expect(response).to.have.property('message');",
+          "        if (response.success) {",
+          "            pm.expect(response).to.have.property('data');",
+          "        }",
+          "    }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}

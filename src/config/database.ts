@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { logger } from '@/utils/logger';
+import logger from '@/utils/logger';
 
 interface DatabaseConfig {
   uri: string;
@@ -25,8 +25,48 @@ const config: DatabaseConfig = {
   },
 };
 
-export const connectDatabase = async (): Promise<typeof mongoose> => {
+export const connectDatabase = async (): Promise<typeof mongoose | null> => {
   try {
+    // Check if database is optional (for development)
+    if (process.env.DATABASE_OPTIONAL === 'true' && process.env.NODE_ENV === 'development') {
+      logger.warn('Database connection is optional in development mode');
+      try {
+        const uri = process.env.NODE_ENV === 'test' ? config.testUri : config.uri;
+        
+        logger.info('Attempting to connect to MongoDB...', {
+          uri: uri.replace(/\/\/.*@/, '//***:***@'), // Hide credentials in logs
+          environment: process.env.NODE_ENV || 'development',
+        });
+
+        mongoose.set('strictQuery', true);
+        
+        // Use shorter timeout for optional connection
+        const quickConnectOptions = {
+          ...config.options,
+          serverSelectionTimeoutMS: 2000, // 2 seconds timeout
+        };
+
+        const connection = await mongoose.connect(uri, quickConnectOptions);
+        
+        // Set up event listeners
+        setupEventListeners();
+
+        logger.info('Successfully connected to MongoDB', {
+          database: connection.connection.db?.databaseName,
+          host: connection.connection.host,
+          port: connection.connection.port,
+          readyState: connection.connection.readyState,
+        });
+
+        return connection;
+      } catch (error) {
+        logger.warn('MongoDB not available - running without database', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return null;
+      }
+    }
+
     const uri = process.env.NODE_ENV === 'test' ? config.testUri : config.uri;
     
     logger.info('Attempting to connect to MongoDB...', {

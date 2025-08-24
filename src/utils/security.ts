@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import speakeasy from 'speakeasy';
 import { Request } from 'express';
@@ -299,7 +299,7 @@ class SecurityUtils {
   }
 
   static validateSqlInput(input: string): boolean {
-    const sqlInjectionPattern = /('|(\\')|(;|\\x00|\\n|\\r|\\x1a)|(\\\\)|(\\/\\*|\\*\\/)|(\\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE)?|INSERT( +INTO)?|MERGE|SELECT|UPDATE|UNION( +ALL)?)\\b))/gi;
+    const sqlInjectionPattern = /('|(\\')|;|\x00|\n|\r|\x1a|\\|\/\*|\*\/|\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE)?|INSERT(\s+INTO)?|MERGE|SELECT|UPDATE|UNION(\s+ALL)?)\b)/gi;
     return !sqlInjectionPattern.test(input);
   }
 

@@ -3,7 +3,7 @@ import userController from '@/controllers/userController';
 import { authenticate, authorize } from '@/middleware/auth';
 import { ValidationMiddleware, validateId, validatePagination } from '@/middleware/validation';
 import UploadMiddleware from '@/middleware/upload';
-import { rateLimitMiddleware } from '@/middleware/rateLimit';
+import { rateLimit } from '@/middleware/rateLimit';
 import Joi from 'joi';
 
 const router = Router();
@@ -119,17 +119,17 @@ const imageUpload = UploadMiddleware.image({
 });
 
 // Rate limiting for different endpoints
-const generalRateLimit = rateLimitMiddleware({
+const generalRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 100,
 });
 
-const uploadRateLimit = rateLimitMiddleware({
+const uploadRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   maxRequests: 10,
 });
 
-const searchRateLimit = rateLimitMiddleware({
+const searchRateLimit = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   maxRequests: 30,
 });
@@ -261,7 +261,7 @@ router.delete(
   '/account',
   authenticate,
   ValidationMiddleware.joi(deleteAccountSchema),
-  rateLimitMiddleware({
+  rateLimit({
     windowMs: 24 * 60 * 60 * 1000, // 24 hours
     maxRequests: 1, // Only one deletion attempt per day
   }),

@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { logger } from '@/utils/logger';
+import logger from '@/utils/logger';
 
 export interface CloudinaryConfig {
   cloudName: string;

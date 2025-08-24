@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { logger } from '@/utils/logger';
+import logger from '@/utils/logger';
 
 // Import route modules
 import authRoutes from './auth';
 import userRoutes from './users';
-// TODO: Import other routes as they are created
+// Import other routes (temporarily disabled for testing)
 // import diagnosisRoutes from './diagnosis';
 // import cropRoutes from './crops';
 // import diseaseRoutes from './diseases';
@@ -31,16 +31,16 @@ router.get('/', (req, res) => {
       endpoints: {
         auth: '/api/auth',
         users: '/api/users',
-        // diagnosis: '/api/diagnosis',
-        // crops: '/api/crops',
-        // diseases: '/api/diseases',
-        // weather: '/api/weather',
-        // community: '/api/community',
-        // experts: '/api/experts',
-        // market: '/api/market',
-        // notifications: '/api/notifications',
-        // i18n: '/api/i18n',
-        // admin: '/api/admin',
+        diagnosis: '/api/diagnosis',
+        crops: '/api/crops',
+        diseases: '/api/diseases',
+        weather: '/api/weather',
+        community: '/api/community',
+        experts: '/api/experts',
+        market: '/api/market',
+        notifications: '/api/notifications',
+        i18n: '/api/i18n',
+        admin: '/api/admin',
       },
       features: {
         authentication: 'JWT-based authentication',
@@ -60,7 +60,7 @@ router.get('/', (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 
-// TODO: Mount other routes as they are created
+// Mount other routes (temporarily disabled for testing)
 // router.use('/diagnosis', diagnosisRoutes);
 // router.use('/crops', cropRoutes);
 // router.use('/diseases', diseaseRoutes);
@@ -76,10 +76,20 @@ router.use('/users', userRoutes);
 logger.info('API routes registered', {
   routes: [
     '/auth',
-    '/users',
-    // TODO: Add other routes as they are created
+    '/users', 
+    // Additional routes temporarily disabled for testing
+    // '/diagnosis',
+    // '/crops',
+    // '/diseases',
+    // '/weather',
+    // '/community',
+    // '/experts',
+    // '/market',
+    // '/notifications',
+    // '/i18n',
+    // '/admin',
   ],
-  totalRoutes: 2, // Update as routes are added
+  totalRoutes: 2,
 });
 
 export default router;

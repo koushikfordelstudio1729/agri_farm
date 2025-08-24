@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run type-check:*)",
+      "Bash(npm install)",
+      "Bash(rm:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm rebuild:*)",
+      "Bash(timeout 30 npm run dev)",
+      "Bash(timeout 20 npm run dev)",
+      "Bash(REDIS_DISABLED=true timeout 20 npm run dev)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

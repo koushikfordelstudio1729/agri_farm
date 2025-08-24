@@ -1,9 +1,9 @@
-// Removed NextFunction import as we're not using it
 import mongoose from 'mongoose';
+import { NextFunction } from 'express';
 import { Diagnosis } from '@/models/Diagnosis';
 import { Crop } from '@/models/Crop';
 import { Disease } from '@/models/Disease';
-import { logger } from '@/utils/logger';
+import logger from '@/utils/logger';
 import {
   NotFoundError,
   ValidationError,
@@ -71,7 +71,7 @@ const processImages = async (files: Express.Multer.File[]): Promise<ImageProcess
 };
 
 // Create new diagnosis
-export const createDiagnosis: CreateDiagnosisController = async (req, res) => {
+export const createDiagnosis: CreateDiagnosisController = async (req, res, next) => {
   try {
     const {
       cropId,
@@ -218,7 +218,7 @@ export const createDiagnosis: CreateDiagnosisController = async (req, res) => {
 };
 
 // Get single diagnosis
-export const getDiagnosis: GetDiagnosisController = async (req, res, ) => {
+export const getDiagnosis: GetDiagnosisController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -259,7 +259,7 @@ export const getDiagnosis: GetDiagnosisController = async (req, res, ) => {
 };
 
 // List diagnoses for user
-export const listDiagnoses: ListDiagnosesController = async (req, res, ) => {
+export const listDiagnoses: ListDiagnosesController = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const {
@@ -331,7 +331,7 @@ export const listDiagnoses: ListDiagnosesController = async (req, res, ) => {
 };
 
 // Update diagnosis
-export const updateDiagnosis: UpdateDiagnosisController = async (req, res, ) => {
+export const updateDiagnosis: UpdateDiagnosisController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -374,7 +374,7 @@ export const updateDiagnosis: UpdateDiagnosisController = async (req, res, ) => 
 };
 
 // Submit feedback
-export const submitFeedback: SubmitFeedbackController = async (req, res, ) => {
+export const submitFeedback: SubmitFeedbackController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -424,7 +424,7 @@ export const submitFeedback: SubmitFeedbackController = async (req, res, ) => {
 };
 
 // Delete diagnosis
-export const deleteDiagnosis: DeleteDiagnosisController = async (req, res, ) => {
+export const deleteDiagnosis: DeleteDiagnosisController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -458,7 +458,7 @@ export const deleteDiagnosis: DeleteDiagnosisController = async (req, res, ) => 
 };
 
 // Retry failed diagnosis
-export const retryDiagnosis: RetryDiagnosisController = async (req, res, ) => {
+export const retryDiagnosis: RetryDiagnosisController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -504,6 +504,347 @@ export const retryDiagnosis: RetryDiagnosisController = async (req, res, ) => {
   }
 };
 
+// Expert review diagnosis
+export const expertReview: ExpertReviewController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const expertId = req.user.id;
+    const { 
+      accuracy, 
+      comments, 
+      suggestedTreatments, 
+      additionalNotes,
+      overrideAiDiagnosis = false 
+    } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ValidationError('Invalid diagnosis ID');
+    }
+
+    const diagnosis = await Diagnosis.findById(id);
+    if (!diagnosis) {
+      throw new NotFoundError('Diagnosis not found');
+    }
+
+    if (diagnosis.status !== DiagnosisStatus.COMPLETED) {
+      throw new BadRequestError('Can only review completed diagnoses');
+    }
+
+    // Check if user is an expert (role validation would be in middleware)
+    diagnosis.expertReview = {
+      expert: expertId,
+      reviewedAt: new Date(),
+      accuracy,
+      comments,
+      suggestedTreatments,
+      additionalNotes,
+      overrideAiDiagnosis,
+    };
+
+    diagnosis.hasExpertReview = true;
+    await diagnosis.save();
+
+    const populatedDiagnosis = await Diagnosis.findById(id)
+      .populate('expertReview.expert', 'firstName lastName profileImage credentials');
+
+    logger.info('Expert review added to diagnosis', {
+      diagnosisId: id,
+      expertId,
+      accuracy,
+      overrideAiDiagnosis,
+    });
+
+    res.json({
+      success: true,
+      message: 'Expert review submitted successfully',
+      data: populatedDiagnosis?.expertReview,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get diagnosis statistics
+export const getDiagnosisStats: GetDiagnosisStatsController = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { timeframe = '30d' } = req.query;
+
+    let startDate: Date;
+    switch (timeframe) {
+      case '7d':
+        startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '90d':
+        startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case '1y':
+        startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    const stats = await Diagnosis.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(userId),
+          isDeleted: false,
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalDiagnoses: { $sum: 1 },
+          completedDiagnoses: {
+            $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
+          },
+          processingDiagnoses: {
+            $sum: { $cond: [{ $eq: ['$status', 'processing'] }, 1, 0] }
+          },
+          failedDiagnoses: {
+            $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] }
+          },
+          averageConfidence: {
+            $avg: {
+              $cond: [
+                { $ne: ['$confidence', null] },
+                '$confidence',
+                0
+              ]
+            }
+          },
+          expertReviewedCount: {
+            $sum: { $cond: ['$hasExpertReview', 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    const cropStats = await Diagnosis.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(userId),
+          isDeleted: false,
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $lookup: {
+          from: 'crops',
+          localField: 'crop',
+          foreignField: '_id',
+          as: 'cropInfo'
+        }
+      },
+      {
+        $unwind: '$cropInfo'
+      },
+      {
+        $group: {
+          _id: '$crop',
+          cropName: { $first: '$cropInfo.name' },
+          count: { $sum: 1 },
+          avgConfidence: { $avg: '$confidence' }
+        }
+      },
+      {
+        $sort: { count: -1 }
+      },
+      {
+        $limit: 10
+      }
+    ]);
+
+    const result = {
+      overview: stats[0] || {
+        totalDiagnoses: 0,
+        completedDiagnoses: 0,
+        processingDiagnoses: 0,
+        failedDiagnoses: 0,
+        averageConfidence: 0,
+        expertReviewedCount: 0,
+      },
+      topCrops: cropStats,
+      timeframe,
+    };
+
+    logger.info('Diagnosis statistics retrieved', {
+      userId,
+      timeframe,
+      totalDiagnoses: result.overview.totalDiagnoses,
+    });
+
+    res.json({
+      success: true,
+      message: 'Diagnosis statistics retrieved successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get public diagnoses (shared anonymously)
+export const getPublicDiagnoses: GetPublicDiagnosesController = async (req, res, next) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      cropId,
+      severity,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = req.query;
+
+    const filter: any = { 
+      shareAnonymous: true, 
+      isDeleted: false,
+      status: DiagnosisStatus.COMPLETED
+    };
+
+    if (cropId) filter.crop = cropId;
+    if (severity) filter['results.severity'] = severity;
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const sort: any = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    const [diagnoses, total] = await Promise.all([
+      Diagnosis.find(filter)
+        .populate('crop', 'name scientificName category')
+        .populate('results.disease', 'name scientificName')
+        .select('-user') // Don't include user info for anonymous sharing
+        .sort(sort)
+        .skip(skip)
+        .limit(Number(limit)),
+      Diagnosis.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / Number(limit));
+
+    logger.info('Public diagnoses retrieved', {
+      count: diagnoses.length,
+      total,
+      filters: { cropId, severity },
+    });
+
+    res.json({
+      success: true,
+      message: 'Public diagnoses retrieved successfully',
+      data: {
+        diagnoses,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages,
+          hasNextPage: Number(page) < totalPages,
+          hasPreviousPage: Number(page) > 1,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Batch diagnosis for multiple images
+export const batchDiagnosis: BatchDiagnosisController = async (req, res, next) => {
+  try {
+    const {
+      cropId,
+      location,
+      symptoms,
+      growthStage,
+      environmentalConditions,
+      farmingPractices,
+      urgencyLevel = 'medium',
+      shareAnonymous = false,
+      shareForResearch = false,
+      tags = [],
+    } = req.body;
+
+    const userId = req.user.id;
+    const imageGroups = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    if (!imageGroups || Object.keys(imageGroups).length === 0) {
+      throw new ValidationError('At least one image group is required for batch diagnosis');
+    }
+
+    const batchId = `batch_${Date.now()}_${userId}`;
+    const createdDiagnoses = [];
+
+    // Process each group of images as separate diagnoses
+    for (const [groupKey, images] of Object.entries(imageGroups)) {
+      if (images.length === 0) continue;
+
+      const diagnosis = new Diagnosis({
+        user: userId,
+        crop: cropId,
+        batchId,
+        images: images.map((img, index) => ({
+          url: `/uploads/${img.filename}`,
+          thumbnailUrl: `/uploads/thumbnails/${img.filename}`,
+          metadata: {
+            size: img.size,
+            format: img.mimetype.split('/')[1],
+            width: 1024,
+            height: 768,
+            colorSpace: 'RGB',
+            quality: 90,
+          },
+          uploadedAt: new Date(),
+        })),
+        location: {
+          type: 'Point',
+          coordinates: [location.longitude, location.latitude],
+          address: location.address,
+        },
+        symptoms,
+        growthStage,
+        environmentalConditions,
+        farmingPractices,
+        urgencyLevel,
+        shareAnonymous,
+        shareForResearch,
+        tags,
+        status: DiagnosisStatus.PROCESSING,
+        createdAt: new Date(),
+      });
+
+      await diagnosis.save();
+      createdDiagnoses.push(diagnosis);
+    }
+
+    logger.info('Batch diagnosis created', {
+      batchId,
+      userId,
+      diagnosesCount: createdDiagnoses.length,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Batch diagnosis initiated successfully',
+      data: {
+        batchId,
+        diagnoses: createdDiagnoses.map(d => ({
+          id: d._id.toString(),
+          status: d.status,
+          imagesCount: d.images.length,
+        })),
+        estimatedCompletionTime: new Date(Date.now() + 60000), // 1 minute
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createDiagnosis,
   getDiagnosis,
@@ -512,4 +853,8 @@ export default {
   submitFeedback,
   deleteDiagnosis,
   retryDiagnosis,
+  expertReview,
+  getDiagnosisStats,
+  getPublicDiagnoses,
+  batchDiagnosis,
 };

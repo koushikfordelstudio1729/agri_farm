@@ -1,5 +1,5 @@
 import Redis, { RedisOptions } from 'ioredis';
-import { logger } from '@/utils/logger';
+import logger from '@/utils/logger';
 
 export interface RedisConfig {
   host: string;
@@ -34,19 +34,67 @@ const redisOptions: RedisOptions = {
   db: redisConfig.db,
   keyPrefix: redisConfig.keyPrefix,
   retryDelayOnFailover: redisConfig.retryDelayOnFailover,
-  maxRetriesPerRequest: redisConfig.maxRetriesPerRequest,
+  maxRetriesPerRequest: process.env.NODE_ENV === 'development' ? 0 : redisConfig.maxRetriesPerRequest,
   lazyConnect: redisConfig.lazyConnect,
   connectTimeout: redisConfig.connectTimeout,
   commandTimeout: redisConfig.commandTimeout,
   enableReadyCheck: true,
   maxLoadingTimeout: 5000,
   enableOfflineQueue: false,
+  // Don't retry connections in development
+  retryDelayOnClusterDown: process.env.NODE_ENV === 'development' ? 0 : 100,
+  autoResubscribe: process.env.NODE_ENV !== 'development',
 };
 
-// Create Redis instances
-export const redis = new Redis(redisOptions);
-export const redisPublisher = new Redis(redisOptions);
-export const redisSubscriber = new Redis(redisOptions);
+// Create Redis instances (with error handling for development)  
+const createRedisInstance = (options: RedisOptions) => {
+  if (process.env.NODE_ENV === 'development' && process.env.REDIS_DISABLED === 'true') {
+    logger.warn('Redis disabled in development mode');
+    // Return a mock Redis instance that doesn't actually connect
+    return {
+      get: async () => null,
+      set: async () => 'OK',
+      del: async () => 1,
+      exists: async () => 0,
+      expire: async () => 1,
+      on: () => {},
+      quit: async () => {},
+      disconnect: () => {},
+    } as any;
+  }
+  
+  const instance = new Redis({
+    ...options,
+    // In development, fail fast instead of retrying
+    connectTimeout: process.env.NODE_ENV === 'development' ? 2000 : options.connectTimeout,
+    maxRetriesPerRequest: process.env.NODE_ENV === 'development' ? 1 : options.maxRetriesPerRequest,
+    retryDelayOnFailover: process.env.NODE_ENV === 'development' ? 100 : options.retryDelayOnFailover,
+  });
+  
+  // For development, don't crash if Redis is unavailable
+  if (process.env.NODE_ENV === 'development') {
+    instance.on('error', (error: Error) => {
+      if (error.message.includes('ECONNREFUSED')) {
+        logger.warn('Redis not available in development mode - some features may be limited', {
+          error: error.message
+        });
+        // Quit the instance to stop retrying
+        setTimeout(() => instance.disconnect(false), 1000);
+        return;
+      }
+      logger.error('Redis connection error', {
+        error: error.message,
+        stack: error.stack,
+      });
+    });
+  }
+  
+  return instance;
+};
+
+export const redis = createRedisInstance(redisOptions);
+export const redisPublisher = createRedisInstance(redisOptions);
+export const redisSubscriber = createRedisInstance(redisOptions);
 
 // Cache TTL constants (in seconds)
 export const CACHE_TTL = {
@@ -75,32 +123,27 @@ export const CACHE_KEYS = {
   BLOCKED_IP: (ip: string) => `blocked_ip:${ip}`,
 } as const;
 
-// Set up Redis event listeners
-redis.on('connect', () => {
-  logger.info('Redis client connected');
-});
-
-redis.on('ready', () => {
-  logger.info('Redis client ready to receive commands');
-});
-
-redis.on('error', (error: Error) => {
-  logger.error('Redis connection error', {
-    error: error.message,
-    stack: error.stack,
+// Additional Redis event listeners for production monitoring
+if (process.env.NODE_ENV !== 'development') {
+  redis.on('connect', () => {
+    logger.info('Redis client connected');
   });
-});
 
-redis.on('close', () => {
-  logger.warn('Redis connection closed');
-});
+  redis.on('ready', () => {
+    logger.info('Redis client ready to receive commands');
+  });
+
+  redis.on('close', () => {
+    logger.warn('Redis connection closed');
+  });
+
+  redis.on('end', () => {
+    logger.warn('Redis connection ended');
+  });
+}
 
 redis.on('reconnecting', (ms: number) => {
   logger.info(`Redis client reconnecting in ${ms}ms`);
-});
-
-redis.on('end', () => {
-  logger.warn('Redis connection ended');
 });
 
 // Utility functions for common cache operations

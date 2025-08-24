@@ -5,7 +5,8 @@ import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import { connectDatabase } from '@/config/database';
 import { initializeCloudinary } from '@/config/cloudinary';
-import { logger, requestLogger } from '@/utils/logger';
+import logger, { loggerUtils } from '@/utils/logger';
+import LoggingMiddleware from '@/middleware/logging';
 import { BaseError, InternalServerError } from '@/utils/errors';
 import { ApiResponse } from '@/types';
 
@@ -119,7 +120,7 @@ class App {
     this.app.set('trust proxy', 1);
 
     // Request logging
-    this.app.use(requestLogger);
+    this.app.use(LoggingMiddleware.requestResponse());
 
     // Request ID middleware
     this.app.use((req: Request, res: Response, next: NextFunction) => {

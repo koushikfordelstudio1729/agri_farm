@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import App from './app';
-import { logger } from '@/utils/logger';
+import logger from '@/utils/logger';
 
 // Handle unhandled promise rejections and uncaught exceptions early
 process.on('unhandledRejection', (reason: unknown) => {

@@ -209,24 +209,32 @@ export const register: RegisterController = async (req, res) => {
       },
     });
   } catch (error) {
-    logger.error('Registration failed', error as Error, createErrorContext({
-      ip: req.ip,
-      headers: req.headers,
-      id: (req as any).id,
-      originalUrl: req.originalUrl,
-      method: req.method,
-    }));
+    try {
+      logger.error('Registration failed', error, {
+        requestId: (req as any)?.id,
+        endpoint: req?.originalUrl,
+        method: req?.method,
+      });
+    } catch (logError) {
+      console.error('Logger error:', logError);
+      console.error('Original error:', error);
+    }
     
     if (error instanceof ValidationError || error instanceof ConflictError) {
       res.status(error.statusCode).json({
         success: false,
         message: error.message,
         error: error.name,
+        ...(error instanceof ValidationError && error.errors && { errors: error.errors }),
       });
     } else {
-      res.status(500).json({
+      // Handle unexpected errors safely
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      const statusCode = (error as any)?.statusCode || 500;
+      
+      res.status(statusCode).json({
         success: false,
-        message: 'Registration failed',
+        message: errorMessage,
         error: 'InternalServerError',
       });
     }
@@ -696,9 +704,147 @@ export const resendVerification: ResendVerificationController = async (req, res)
   }
 };
 
+// Phone authentication with OTP
+export const phoneAuth: PhoneAuthController = async (req, res) => {
+  try {
+    const { phone, countryCode } = req.body;
+
+    // Find user by phone number
+    const user = await User.findOne({
+      phone,
+      countryCode,
+      isDeleted: false,
+    });
+
+    if (!user) {
+      throw new NotFoundError('No account found with this phone number');
+    }
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Save OTP to user
+    user.phoneOtp = otp;
+    user.phoneOtpExpires = otpExpires;
+    await user.save();
+
+    // TODO: Send OTP via SMS
+    // await smsService.sendOTP(phone, countryCode, otp);
+
+    logger.info('OTP sent for phone authentication', {
+      userId: user._id.toString(),
+      phone,
+      countryCode,
+      ip: req.ip,
+    });
+
+    res.json({
+      success: true,
+      message: 'OTP sent to your phone number',
+      data: {
+        message: 'OTP sent to your phone number',
+        otpSent: true,
+      },
+    });
+  } catch (error) {
+    logger.error('Phone auth failed', error as Error);
+    
+    if (error instanceof NotFoundError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        error: error.name,
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Phone authentication failed',
+        error: 'InternalServerError',
+      });
+    }
+  }
+};
+
+// Verify OTP
+export const verifyOtp: VerifyOtpController = async (req, res) => {
+  try {
+    const { phone, countryCode, otp } = req.body;
+
+    // Find user with valid OTP
+    const user = await User.findOne({
+      phone,
+      countryCode,
+      phoneOtp: otp,
+      phoneOtpExpires: { $gt: Date.now() },
+      isDeleted: false,
+    });
+
+    if (!user) {
+      throw new AuthenticationError('Invalid or expired OTP');
+    }
+
+    // Clear OTP
+    user.phoneOtp = undefined as any;
+    user.phoneOtpExpires = undefined as any;
+    user.isPhoneVerified = true;
+    await user.save();
+
+    // Generate auth tokens
+    const tokens = generateTokens(
+      user._id.toString(),
+      user.email,
+      user.role
+    );
+
+    logger.info('OTP verified successfully', {
+      userId: user._id.toString(),
+      phone,
+      countryCode,
+      ip: req.ip,
+    });
+
+    res.json({
+      success: true,
+      message: 'Phone verification successful',
+      data: {
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isEmailVerified: user.isEmailVerified,
+          isPhoneVerified: user.isPhoneVerified,
+          profileImage: user.profileImage,
+        },
+        tokens,
+      },
+    });
+  } catch (error) {
+    logger.error('OTP verification failed', error as Error);
+    
+    if (error instanceof AuthenticationError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        error: error.name,
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'OTP verification failed',
+        error: 'InternalServerError',
+      });
+    }
+  }
+};
+
 export default {
   register,
   login,
+  phoneAuth,
+  verifyOtp,
   refreshToken,
   logout,
   requestPasswordReset,
