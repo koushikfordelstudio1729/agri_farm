@@ -26,6 +26,11 @@ export class EmailService {
   private initializeTransporter(): void {
     try {
       if (this.config.service === 'sendgrid') {
+        if (!this.config.apiKey || this.config.apiKey.includes('your_')) {
+          console.warn('SendGrid API key not configured. Email service will not be available.');
+          return;
+        }
+        
         this.transporter = nodemailer.createTransporter({
           service: 'SendGrid',
           auth: {
@@ -34,35 +39,59 @@ export class EmailService {
           },
         });
       } else if (this.config.service === 'mailgun') {
+        const username = process.env.MAILGUN_USERNAME as string;
+        const password = process.env.MAILGUN_PASSWORD as string;
+        
+        if (!username || !password || username.includes('your_') || password.includes('your_')) {
+          console.warn('Mailgun credentials not configured. Email service will not be available.');
+          return;
+        }
+        
         this.transporter = nodemailer.createTransporter({
           service: 'Mailgun',
-          auth: {
-            user: process.env.MAILGUN_USERNAME as string,
-            pass: process.env.MAILGUN_PASSWORD as string,
-          },
+          auth: { user: username, pass: password },
         });
-      } else {
-        // SMTP configuration
+      } else if (this.config.service === 'smtp') {
+        const host = process.env.SMTP_HOST as string;
+        const user = process.env.SMTP_USER as string;
+        const pass = process.env.SMTP_PASS as string;
+        
+        if (!host || !user || !pass || host.includes('your_') || user.includes('your_') || pass.includes('your_')) {
+          console.warn('SMTP credentials not configured. Email service will not be available.');
+          return;
+        }
+        
         this.transporter = nodemailer.createTransporter({
-          host: process.env.SMTP_HOST as string,
+          host,
           port: parseInt(process.env.SMTP_PORT || '587', 10),
           secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USERNAME as string,
-            pass: process.env.SMTP_PASSWORD as string,
-          },
+          auth: { user, pass },
         });
+      } else {
+        console.warn(`Email service '${this.config.service}' not configured or unsupported. Email service will not be available.`);
+        return;
       }
 
-      logger.info('Email service initialized successfully');
+      console.log(`Email service initialized successfully with ${this.config.service}`);
     } catch (error) {
-      logger.error('Failed to initialize email service', { error });
-      throw error;
+      console.error('Failed to initialize email service:', error);
+      // Don't throw error in development to allow server to start
+      if (process.env.NODE_ENV === 'production') {
+        throw error;
+      }
     }
   }
 
   public async sendEmail(options: EmailOptions): Promise<EmailResult> {
     try {
+      // Check if transporter is initialized
+      if (!this.transporter) {
+        return {
+          success: false,
+          error: 'Email service not configured. Please set up SendGrid, Mailgun, or SMTP credentials.',
+        };
+      }
+
       const mailOptions = {
         from: `${this.config.fromName} <${this.config.from}>`,
         to: options.to,

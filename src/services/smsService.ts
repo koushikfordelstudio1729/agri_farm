@@ -38,30 +38,63 @@ export class SmsService {
   private initializeProvider(): void {
     try {
       if (this.config.provider === 'twilio' && this.config.twilio) {
+        // Check if required Twilio credentials are provided
+        if (!this.config.twilio.accountSid || !this.config.twilio.authToken) {
+          console.warn('Twilio credentials not configured. SMS service will not be available.');
+          return;
+        }
+        
+        if (this.config.twilio.accountSid.includes('your_') || this.config.twilio.authToken.includes('your_')) {
+          console.warn('Twilio credentials are placeholder values. Please configure real credentials.');
+          return;
+        }
+
         this.twilioClient = twilio(
           this.config.twilio.accountSid,
           this.config.twilio.authToken
         );
-        logger.info('Twilio SMS service initialized');
+        console.log('Twilio SMS service initialized');
       } else if (this.config.provider === 'aws_sns' && this.config.aws) {
+        // Check if required AWS credentials are provided
+        if (!this.config.aws.accessKeyId || !this.config.aws.secretAccessKey || !this.config.aws.region) {
+          console.warn('AWS SNS credentials not configured. SMS service will not be available.');
+          return;
+        }
+        
+        if (this.config.aws.accessKeyId.includes('your_') || this.config.aws.secretAccessKey.includes('your_')) {
+          console.warn('AWS SNS credentials are placeholder values. Please configure real credentials.');
+          return;
+        }
+
         AWS.config.update({
           accessKeyId: this.config.aws.accessKeyId,
           secretAccessKey: this.config.aws.secretAccessKey,
           region: this.config.aws.region,
         });
         this.snsClient = new AWS.SNS();
-        logger.info('AWS SNS SMS service initialized');
+        console.log('AWS SNS SMS service initialized');
       } else {
-        throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
+        console.warn(`SMS provider '${this.config.provider}' not configured or unsupported. SMS service will not be available.`);
       }
     } catch (error) {
-      logger.error('Failed to initialize SMS service', { error });
-      throw error;
+      console.error('SMS Service initialization error:', error);
+      // Don't throw error in development to allow server to start
+      if (process.env.NODE_ENV === 'production') {
+        throw error;
+      }
     }
   }
 
   public async sendSms(options: SmsOptions): Promise<SmsResult> {
     try {
+      // Check if service is initialized
+      if (!this.twilioClient && !this.snsClient) {
+        return {
+          success: false,
+          error: 'SMS service not configured. Please set up Twilio or AWS SNS credentials.',
+        };
+      }
+
       // Validate and format phone number
       const phoneNumber = this.formatPhoneNumber(options.to);
       if (!phoneNumber) {
@@ -75,9 +108,21 @@ export class SmsService {
 
       switch (this.config.provider) {
         case 'twilio':
+          if (!this.twilioClient) {
+            return {
+              success: false,
+              error: 'Twilio client not initialized',
+            };
+          }
           result = await this.sendViaTwilio(phoneNumber.number, options.message);
           break;
         case 'aws_sns':
+          if (!this.snsClient) {
+            return {
+              success: false,
+              error: 'AWS SNS client not initialized',
+            };
+          }
           result = await this.sendViaAwsSns(phoneNumber.number, options.message);
           break;
         default:

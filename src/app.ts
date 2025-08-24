@@ -2,6 +2,7 @@ import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import passport from 'passport';
 import { config } from 'dotenv';
 import { connectDatabase } from '@/config/database';
 import { initializeCloudinary } from '@/config/cloudinary';
@@ -9,6 +10,9 @@ import logger, { loggerUtils } from '@/utils/logger';
 import LoggingMiddleware from '@/middleware/logging';
 import { BaseError, InternalServerError } from '@/utils/errors';
 import { ApiResponse } from '@/types';
+
+// Initialize social auth service
+import '@/services/socialAuthService';
 
 // Load environment variables
 config();
@@ -115,6 +119,9 @@ class App {
       extended: true, 
       limit: process.env.URL_ENCODED_LIMIT || '10mb',
     }));
+
+    // Initialize passport for OAuth
+    this.app.use(passport.initialize());
 
     // Trust proxy for accurate IP addresses
     this.app.set('trust proxy', 1);

@@ -83,6 +83,7 @@ class LoggingMiddleware {
         performanceMonitor.startTimer(`http.request.${req.method.toLowerCase()}`, {
           endpoint: req.route?.path || req.path,
           method: req.method,
+          status: '200', // Default status, will be updated on finish
         });
       }
 
@@ -109,11 +110,16 @@ class LoggingMiddleware {
         
         // Performance monitoring
         if (logPerformance) {
-          performanceMonitor.endTimer(`http.request.${req.method.toLowerCase()}`, {
-            endpoint: req.route?.path || req.path,
-            method: req.method,
-            status: res.statusCode.toString(),
-          });
+          try {
+            performanceMonitor.endTimer(`http.request.${req.method.toLowerCase()}`, {
+              endpoint: req.route?.path || req.path,
+              method: req.method,
+              status: '200', // Use same status as start to match key
+            });
+          } catch (timerError) {
+            // Timer might not exist, skip performance monitoring for this request
+            console.warn('Performance timer error:', timerError.message);
+          }
 
           // Record metrics
           performanceMonitor.recordValue('http.response_time', responseTime, {

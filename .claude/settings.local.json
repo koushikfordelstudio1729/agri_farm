@@ -11,7 +11,8 @@
       "Bash(timeout 20 npm run dev)",
       "Bash(REDIS_DISABLED=true timeout 20 npm run dev)",
       "Bash(npm run dev:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

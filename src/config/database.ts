@@ -1,5 +1,9 @@
+import { config as dotenvConfig } from 'dotenv';
 import mongoose from 'mongoose';
 import logger from '@/utils/logger';
+
+// Load environment variables
+dotenvConfig();
 
 interface DatabaseConfig {
   uri: string;

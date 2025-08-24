@@ -5,6 +5,7 @@ import { authenticate, authRateLimit } from '@/middleware/auth';
 import authController from '@/controllers/authController';
 import { ValidationError } from '@/utils/errors';
 import { AUTH_ROUTES } from './auth.types';
+import passport from 'passport';
 
 const router = Router();
 
@@ -296,26 +297,173 @@ router.post(
   authController.changePassword
 );
 
-// Phone authentication routes (if implemented)
-// router.post(
-//   AUTH_ROUTES.PHONE_AUTH,
-//   authRateLimit(5),
-//   phoneAuthValidation,
-//   handleValidationErrors,
-//   authController.initiatePhoneAuth
-// );
+// OTP verification routes
+const otpRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 3, // 3 OTP requests per 5 minutes
+  message: {
+    success: false,
+    message: 'Too many OTP requests, please try again later.',
+    error: 'RateLimitExceeded',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-// router.post(
-//   AUTH_ROUTES.VERIFY_OTP,
-//   authRateLimit(10),
-//   otpValidation,
-//   handleValidationErrors,
-//   authController.verifyOtp
-// );
+const otpVerifyRateLimit = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 5, // 5 verification attempts per 10 minutes
+  message: {
+    success: false,
+    message: 'Too many verification attempts, please try again later.',
+    error: 'RateLimitExceeded',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-// Social auth routes (if implemented)
-// router.get(AUTH_ROUTES.GOOGLE_AUTH, passport.authenticate('google', { scope: ['profile', 'email'] }));
-// router.get(AUTH_ROUTES.GOOGLE_CALLBACK, passport.authenticate('google'), authController.socialAuthCallback);
+// Email OTP routes
+router.post(
+  '/otp/email/send',
+  otpRateLimit,
+  [
+    body('email')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Please provide a valid email address'),
+  ],
+  handleValidationErrors,
+  authController.sendEmailOtp
+);
+
+router.post(
+  '/otp/email/verify',
+  otpVerifyRateLimit,
+  [
+    body('email')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Please provide a valid email address'),
+    body('otp')
+      .isLength({ min: 4, max: 8 })
+      .isNumeric()
+      .withMessage('Please provide a valid OTP'),
+  ],
+  handleValidationErrors,
+  authController.verifyEmailOtp
+);
+
+// Phone OTP routes
+router.post(
+  '/otp/phone/send',
+  otpRateLimit,
+  [
+    body('phone')
+      .isMobilePhone('any')
+      .withMessage('Please provide a valid phone number'),
+    body('countryCode')
+      .optional()
+      .matches(/^\+\d{1,4}$/)
+      .withMessage('Please provide a valid country code'),
+  ],
+  handleValidationErrors,
+  authController.sendPhoneOtp
+);
+
+router.post(
+  '/otp/phone/verify',
+  otpVerifyRateLimit,
+  [
+    body('phone')
+      .isMobilePhone('any')
+      .withMessage('Please provide a valid phone number'),
+    body('countryCode')
+      .optional()
+      .matches(/^\+\d{1,4}$/)
+      .withMessage('Please provide a valid country code'),
+    body('otp')
+      .isLength({ min: 4, max: 8 })
+      .isNumeric()
+      .withMessage('Please provide a valid OTP'),
+  ],
+  handleValidationErrors,
+  authController.verifyPhoneOtp
+);
+
+// Phone-based login routes
+router.post(
+  '/login/phone/request',
+  otpRateLimit,
+  [
+    body('phone')
+      .isMobilePhone('any')
+      .withMessage('Please provide a valid phone number'),
+    body('countryCode')
+      .optional()
+      .matches(/^\+\d{1,4}$/)
+      .withMessage('Please provide a valid country code'),
+  ],
+  handleValidationErrors,
+  authController.requestPhoneLoginOtp
+);
+
+router.post(
+  '/login/phone/verify',
+  otpVerifyRateLimit,
+  [
+    body('phone')
+      .isMobilePhone('any')
+      .withMessage('Please provide a valid phone number'),
+    body('countryCode')
+      .optional()
+      .matches(/^\+\d{1,4}$/)
+      .withMessage('Please provide a valid country code'),
+    body('otp')
+      .isLength({ min: 4, max: 8 })
+      .isNumeric()
+      .withMessage('Please provide a valid OTP'),
+    body('rememberMe')
+      .optional()
+      .isBoolean()
+      .withMessage('Remember me must be a boolean value'),
+  ],
+  handleValidationErrors,
+  authController.loginWithPhone
+);
+
+// Google OAuth routes
+router.get(
+  '/google',
+  passport.authenticate('google', { 
+    scope: ['profile', 'email'],
+    session: false 
+  })
+);
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { 
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/login?error=oauth_failed`,
+    session: false 
+  }),
+  authController.googleAuthCallback
+);
+
+// Mobile Google Sign-In endpoint
+router.post(
+  '/google/mobile',
+  [
+    body('idToken')
+      .notEmpty()
+      .withMessage('Google ID token is required'),
+    body('rememberMe')
+      .optional()
+      .isBoolean()
+      .withMessage('Remember me must be a boolean value'),
+  ],
+  handleValidationErrors,
+  authController.mobileGoogleSignIn
+);
 
 // Get current user info
 router.get(

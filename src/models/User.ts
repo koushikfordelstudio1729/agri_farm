@@ -227,6 +227,35 @@ const userSchema = new Schema<IUser>({
   passwordResetToken: String,
   passwordResetExpires: Date,
   
+  // Refresh tokens for session management
+  refreshTokens: [{
+    token: {
+      type: String,
+      required: true,
+    },
+    tokenId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+    lastUsed: {
+      type: Date,
+      default: Date.now,
+    },
+    deviceInfo: {
+      userAgent: String,
+      ip: String,
+    },
+  }],
+  
   // User preferences
   preferredLanguage: {
     type: String,
@@ -313,6 +342,7 @@ function removeFields(doc: IUser, ret: Record<string, unknown>): Record<string, 
   delete ret.emailVerificationExpires;
   delete ret.phoneVerificationToken;
   delete ret.phoneVerificationExpires;
+  delete ret.refreshTokens;
   delete ret.__v;
   return ret;
 }

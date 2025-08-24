@@ -33,6 +33,19 @@ export interface IUser extends Document {
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   
+  // Refresh tokens
+  refreshTokens: Array<{
+    token: string;
+    tokenId: string;
+    createdAt: Date;
+    expiresAt: Date;
+    lastUsed: Date;
+    deviceInfo?: {
+      userAgent?: string;
+      ip?: string;
+    };
+  }>;
+  
   // User preferences
   preferredLanguage: LanguageCode;
   location?: LocationData;

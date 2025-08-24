@@ -3,7 +3,9 @@ import { logger } from '@/utils/logger';
 import { smsService } from './smsService';
 import { emailService } from './emailService';
 import { OTPAttempt } from '@/models/OTPAttempt';
-import { PhoneVerification } from '@/models/PhoneVerification';
+import PhoneVerification from '@/models/PhoneVerification';
+import EmailVerification from '@/models/EmailVerification';
+import User from '@/models/User';
 import {
   OtpServiceConfig,
   OtpGenerateOptions,
@@ -245,49 +247,77 @@ export class OtpService {
     method: OtpMethod,
     type: OtpType
   ): Promise<void> {
-    const hashedOtp = this.hashOtp(otp);
-
     if (method === 'sms') {
-      await PhoneVerification.create({
-        phoneNumber: identifier,
-        otp: hashedOtp,
-        expiresAt: expiryTime,
-        type,
-        isUsed: false,
-        attempts: 0,
-        createdAt: new Date(),
+      await PhoneVerification.createVerification({
+        phone: identifier,
+        countryCode: '+1', // Default, should be passed from options
+        otp,
+        purpose: this.mapTypeToPurpose(type),
+        expirationMinutes: Math.ceil((expiryTime.getTime() - Date.now()) / (60 * 1000)),
+        ipAddress: '127.0.0.1', // Should be passed from request
+        userAgent: 'OtpService', // Should be passed from request
+      });
+    } else if (method === 'email') {
+      await EmailVerification.createVerification({
+        email: identifier,
+        purpose: this.mapTypeToPurpose(type),
+        expirationMinutes: Math.ceil((expiryTime.getTime() - Date.now()) / (60 * 1000)),
+        ipAddress: '127.0.0.1', // Should be passed from request
+        userAgent: 'OtpService', // Should be passed from request
       });
     }
-    // Add similar logic for email if you have EmailVerification model
   }
 
   private async findValidOtp(identifier: string, method: OtpMethod): Promise<any> {
     if (method === 'sms') {
-      return PhoneVerification.findOne({
-        phoneNumber: identifier,
-        isUsed: false,
-        expiresAt: { $gt: new Date() },
-      }).sort({ createdAt: -1 });
+      return PhoneVerification.findActiveByPhone(identifier, '+1'); // Should parse country code
+    } else if (method === 'email') {
+      return EmailVerification.findActiveByEmail(identifier);
     }
-    // Add similar logic for email
     return null;
   }
 
   private async markOtpAsUsed(otpId: string): Promise<void> {
-    await PhoneVerification.findByIdAndUpdate(otpId, {
-      isUsed: true,
-      usedAt: new Date(),
-    });
+    // The verification models handle this internally via markAsVerified method
   }
 
   private async markPhoneAsVerified(phoneNumber: string): Promise<void> {
-    // This would update the user model to mark phone as verified
-    // Implementation depends on your User model structure
+    await User.findOneAndUpdate(
+      { phone: phoneNumber },
+      { 
+        isPhoneVerified: true,
+        phoneVerificationExpires: undefined,
+        phoneVerificationToken: undefined
+      }
+    );
   }
 
   private async markEmailAsVerified(email: string): Promise<void> {
-    // This would update the user model to mark email as verified
-    // Implementation depends on your User model structure
+    await User.findOneAndUpdate(
+      { email: email.toLowerCase().trim() },
+      { 
+        isEmailVerified: true,
+        emailVerificationExpires: undefined,
+        emailVerificationToken: undefined
+      }
+    );
+  }
+
+  private mapTypeToPurpose(type: OtpType): 'registration' | 'login' | 'password_reset' | 'account_verification' {
+    switch (type) {
+      case 'verification':
+        return 'account_verification';
+      case 'login':
+        return 'login';
+      case 'password_reset':
+        return 'password_reset';
+      case 'phone_change':
+        return 'account_verification';
+      case 'two_factor':
+        return 'login';
+      default:
+        return 'account_verification';
+    }
   }
 
   private async checkRateLimit(identifier: string, method: OtpMethod): Promise<{
@@ -298,26 +328,35 @@ export class OtpService {
     const cooldownTime = new Date(now.getTime() - this.config.resendCooldownSeconds * 1000);
 
     let recentAttempts = 0;
+    let lastAttempt: any = null;
+
     if (method === 'sms') {
       recentAttempts = await PhoneVerification.countDocuments({
-        phoneNumber: identifier,
+        phone: identifier.replace(/\D/g, ''),
         createdAt: { $gte: cooldownTime },
       });
+      
+      lastAttempt = await PhoneVerification.findOne({
+        phone: identifier.replace(/\D/g, ''),
+      }).sort({ createdAt: -1 });
+    } else if (method === 'email') {
+      recentAttempts = await EmailVerification.countDocuments({
+        email: identifier.toLowerCase().trim(),
+        createdAt: { $gte: cooldownTime },
+      });
+      
+      lastAttempt = await EmailVerification.findOne({
+        email: identifier.toLowerCase().trim(),
+      }).sort({ createdAt: -1 });
     }
 
-    if (recentAttempts > 0) {
-      const lastAttempt = await PhoneVerification.findOne({
-        phoneNumber: identifier,
-      }).sort({ createdAt: -1 });
-
-      if (lastAttempt) {
-        const timeSinceLastAttempt = Math.floor((now.getTime() - lastAttempt.createdAt.getTime()) / 1000);
-        if (timeSinceLastAttempt < this.config.resendCooldownSeconds) {
-          return {
-            allowed: false,
-            waitTimeSeconds: this.config.resendCooldownSeconds - timeSinceLastAttempt,
-          };
-        }
+    if (recentAttempts > 0 && lastAttempt) {
+      const timeSinceLastAttempt = Math.floor((now.getTime() - lastAttempt.createdAt.getTime()) / 1000);
+      if (timeSinceLastAttempt < this.config.resendCooldownSeconds) {
+        return {
+          allowed: false,
+          waitTimeSeconds: this.config.resendCooldownSeconds - timeSinceLastAttempt,
+        };
       }
     }
 
