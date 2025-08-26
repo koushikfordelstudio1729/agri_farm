@@ -3,6 +3,7 @@ import { NextFunction } from 'express';
 import { Diagnosis } from '@/models/Diagnosis';
 import { Crop } from '@/models/Crop';
 import { Disease } from '@/models/Disease';
+import { aiService } from '@/services/aiService';
 import logger from '@/utils/logger';
 import {
   NotFoundError,
@@ -30,22 +31,63 @@ import {
 import { Diagnosis as DiagnosisType } from '@/types';
 import { DiagnosisStatus } from '@/utils/constants';
 
-// AI Service placeholder - would be implemented separately
-const processPlantImages = async (images: Express.Multer.File[]): Promise<DiagnosisProcessingResult> => {
-  // Mock AI processing - replace with actual AI service
-  return {
-    success: true,
-    results: [
-      {
-        disease: 'tomato_blight',
-        confidence: 0.85,
-        severity: 'moderate',
-        recommendations: ['Apply fungicide', 'Remove affected leaves'],
-      },
-    ],
-    confidence: 85,
-    processingTime: 2.5,
-  };
+/**
+ * Process plant images using ML services for disease detection
+ */
+const processPlantImages = async (
+  images: Express.Multer.File[], 
+  cropId?: string,
+  useEnsemble?: boolean
+): Promise<DiagnosisProcessingResult> => {
+  try {
+    const startTime = Date.now();
+    
+    // Convert Express.Multer.File[] to Buffer[]
+    const imageBuffers = images.map(file => file.buffer);
+    
+    // Use the AI service for disease detection
+    const diagnosisResult = await aiService.diagnoseDisease(imageBuffers, cropId, useEnsemble);
+    
+    const processingTime = (Date.now() - startTime) / 1000; // Convert to seconds
+    
+    return {
+      success: true,
+      results: [
+        {
+          disease: diagnosisResult.diseaseId,
+          confidence: diagnosisResult.confidence,
+          severity: diagnosisResult.severity,
+          recommendations: diagnosisResult.treatments.map(t => 
+            typeof t === 'string' ? t : t.steps?.join(', ') || 'Apply recommended treatment'
+          ).slice(0, 3), // Take first 3 recommendations
+        },
+      ],
+      confidence: Math.round(diagnosisResult.confidence * 100),
+      processingTime,
+      metadata: {
+        aiModel: 'Multi-provider ML',
+        diseaseId: diagnosisResult.diseaseId,
+        diseaseName: diagnosisResult.diseaseName,
+        severity: diagnosisResult.severity,
+        affectedArea: diagnosisResult.affectedArea,
+        symptoms: diagnosisResult.symptoms,
+        causes: diagnosisResult.causes,
+        preventionTips: diagnosisResult.preventionTips,
+        expectedRecoveryTime: diagnosisResult.expectedRecoveryTime,
+        riskFactors: diagnosisResult.riskFactors
+      }
+    };
+  } catch (error) {
+    logger.error('Plant image processing failed', { error: (error as Error).message });
+    
+    return {
+      success: false,
+      results: [],
+      confidence: 0,
+      processingTime: 0,
+      error: (error as Error).message
+    };
+  }
 };
 
 // Image processing service
@@ -143,7 +185,8 @@ export const createDiagnosis: CreateDiagnosisController = async (req, res, next)
 
     // Process with AI in background
     try {
-      const aiResult = await processPlantImages(images);
+      const useEnsemble = process.env.ML_USE_ENSEMBLE === 'true';
+      const aiResult = await processPlantImages(images, cropId, useEnsemble);
       
       if (aiResult.success && aiResult.results) {
         // Find matching diseases

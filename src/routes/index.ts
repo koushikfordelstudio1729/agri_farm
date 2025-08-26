@@ -4,6 +4,7 @@ import logger from '@/utils/logger';
 // Import route modules
 import authRoutes from './auth';
 import userRoutes from './users';
+import mlRoutes from './ml';
 // Import other routes (temporarily disabled for testing)
 // import diagnosisRoutes from './diagnosis';
 // import cropRoutes from './crops';
@@ -41,6 +42,7 @@ router.get('/', (req, res) => {
         notifications: '/api/notifications',
         i18n: '/api/i18n',
         admin: '/api/admin',
+        ml: '/api/ml',
       },
       features: {
         authentication: 'JWT-based authentication',
@@ -59,6 +61,7 @@ router.get('/', (req, res) => {
 // Mount route modules
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
+router.use('/ml', mlRoutes);
 
 // Mount other routes (temporarily disabled for testing)
 // router.use('/diagnosis', diagnosisRoutes);
@@ -76,7 +79,8 @@ router.use('/users', userRoutes);
 logger.info('API routes registered', {
   routes: [
     '/auth',
-    '/users', 
+    '/users',
+    '/ml',
     // Additional routes temporarily disabled for testing
     // '/diagnosis',
     // '/crops',
@@ -89,7 +93,7 @@ logger.info('API routes registered', {
     // '/i18n',
     // '/admin',
   ],
-  totalRoutes: 2,
+  totalRoutes: 3,
 });
 
 export default router;
